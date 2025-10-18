@@ -1,0 +1,19 @@
+# Virtual environments
+venv/
+.env/
+
+# Datasets and generated data
+data/
+checkpoints/
+results/
+features/
+*.pkl
+*.zip
+*.pt
+*.pth
+
+# System / IDE files
+__pycache__/
+*.log
+*.DS_Store
+.vscode/
