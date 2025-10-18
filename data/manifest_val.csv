@@ -1,0 +1,2 @@
+filename,audio_path,video_path,text,label
+val_000,data/raw/audio/val_000.wav,data/raw/video/val_000.mp4,Amazing visuals and story!,2

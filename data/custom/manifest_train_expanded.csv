@@ -1,0 +1,31 @@
+filename,audio_path,video_path,text,label
+train_00_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_00_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_00_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_01_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_01_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_01_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_02_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_02_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_02_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_03_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_03_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_03_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_04_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_04_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_04_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_05_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_05_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_05_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_06_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_06_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_06_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_07_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_07_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_07_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_08_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_08_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_08_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1
+train_09_000,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+train_09_001,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+train_09_002,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1

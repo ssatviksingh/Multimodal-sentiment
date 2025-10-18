@@ -1,0 +1,20 @@
+torch>=2.0
+torchaudio
+transformers>=4.30
+datasets
+scikit-learn
+numpy
+pandas
+matplotlib
+opencv-python
+librosa
+tqdm
+opencv-python-headless
+python-dotenv
+wandb
+sentencepiece
+torchvision
+soundfile
+# Optional
+# pytorch-lightning
+

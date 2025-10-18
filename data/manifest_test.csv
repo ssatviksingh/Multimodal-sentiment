@@ -1,0 +1,3 @@
+filename,audio_path,video_path,text,label
+test_000,data/raw/audio/test_000.wav,data/raw/video/test_000.mp4,"Poor sound quality, bad experience.",0
+test_001,data/raw/audio/test_001.wav,data/raw/video/test_001.mp4,"It was okay, could be better.",1

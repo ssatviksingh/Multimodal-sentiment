@@ -1,0 +1,4 @@
+id,text_path,audio_path,video_path,label
+sample_010,data/custom\text\sample_010.txt,data/custom\audio\sample_010.wav,data/custom\video\sample_010.mp4,1
+sample_004,data/custom\text\sample_004.txt,data/custom\audio\sample_004.wav,data/custom\video\sample_004.mp4,2
+sample_002,data/custom\text\sample_002.txt,data/custom\audio\sample_002.wav,data/custom\video\sample_002.mp4,0

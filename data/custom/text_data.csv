@@ -1,0 +1,16 @@
+filename,text,label
+sample_000,I absolutely loved this product!,2
+sample_001,The movie was amazing and full of emotions.,2
+sample_002,That was a wonderful experience!,2
+sample_003,The app is smooth and works perfectly.,2
+sample_004,Great service and friendly staff.,2
+sample_005,The product arrived yesterday.,1
+sample_006,"It’s okay, just what I expected.",1
+sample_007,"The color looks fine, nothing special.",1
+sample_008,The meeting was held on time.,1
+sample_009,I watched the movie yesterday.,1
+sample_010,I really hated this experience.,0
+sample_011,The sound quality was terrible.,0
+sample_012,It crashed multiple times and was frustrating.,0
+sample_013,The movie was boring and slow.,0
+sample_014,Worst product I’ve ever used.,0

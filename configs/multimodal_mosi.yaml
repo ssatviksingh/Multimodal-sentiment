@@ -1,0 +1,7 @@
+﻿data_dir: data/processed
+model_name: roberta-base
+batch_size: 8
+epochs: 6
+lr: 1e-4
+num_classes: 3
+freeze_encoders: True

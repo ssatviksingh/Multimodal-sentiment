@@ -1,0 +1,4 @@
+filename,audio_path,video_path,text,label
+sample_001,data/raw/audio/train_000.wav,data/raw/video/train_000.mp4,"I loved this movie, it was fantastic!",2
+sample_003,data/raw/audio/train_001.wav,data/raw/video/train_001.mp4,"Terrible acting, I hated it.",0
+sample_013,data/raw/audio/train_002.wav,data/raw/video/train_002.mp4,"Average film, nothing special.",1

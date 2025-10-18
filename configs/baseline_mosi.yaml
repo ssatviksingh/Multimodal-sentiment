@@ -1,0 +1,6 @@
+﻿data_dir: data/processed
+model_name: roberta-base
+batch_size: 16
+epochs: 5
+lr: 3e-4
+num_classes: 3
