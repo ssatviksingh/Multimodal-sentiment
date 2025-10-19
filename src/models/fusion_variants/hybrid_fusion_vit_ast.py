@@ -66,9 +66,15 @@ class MultimodalDataset(Dataset):
         #         raise FileNotFoundError(f"❌ Missing feature file for sample {sid}")
 
         try:
-            t = torch.load(os.path.join(self.feature_dir, "text", f"{sid}.pt")).float()
-            a = torch.load(os.path.join(self.feature_dir, "audio", f"{sid}.pt")).float()
-            v = torch.load(os.path.join(self.feature_dir, "video", f"{sid}.pt")).float()
+            t = torch.load(os.path.join(self.feature_dir, "text", f"{sid}.pt")).float().squeeze()
+            a = torch.load(os.path.join(self.feature_dir, "audio", f"{sid}.pt")).float().squeeze()
+            v = torch.load(os.path.join(self.feature_dir, "video", f"{sid}.pt")).float().squeeze()
+
+            # Ensure all are 1D tensors
+            if t.dim() > 1: t = t.mean(dim=0)
+            if a.dim() > 1: a = a.mean(dim=0)
+            if v.dim() > 1: v = v.mean(dim=0)
+
         except FileNotFoundError as e:
             raise FileNotFoundError(f"❌ Missing one or more feature files for sample '{sid}' → {e.filename}")
 
@@ -80,21 +86,28 @@ class MultimodalDataset(Dataset):
 # -------- MODEL ----------
 class HybridFusionModel(nn.Module):
     def __init__(self,
-                 text_dim=768, audio_dim=768, video_dim=1000,
+                 text_dim=768, audio_dim=768, video_dim=768,
                  proj_dim=512, transformer_layers=2, nhead=8, hidden=512, num_classes=3):
         super().__init__()
-        # modality projection to same dimension
-        self.proj_t = nn.Sequential(nn.Linear(768, 512), nn.ReLU(), nn.Dropout(0.2))
-        self.proj_a = nn.Sequential(nn.Linear(768, 512), nn.ReLU(), nn.Dropout(0.2))
-        self.proj_v = nn.Sequential(nn.Linear(768, 512), nn.ReLU(), nn.Dropout(0.2))
+                # modality projection to same dimension (use provided input dims)
+        self.proj_t = nn.Sequential(nn.Linear(text_dim, proj_dim), nn.ReLU(), nn.Dropout(0.2))
+        self.proj_a = nn.Sequential(nn.Linear(audio_dim, proj_dim), nn.ReLU(), nn.Dropout(0.2))
+        self.proj_v = nn.Sequential(nn.Linear(video_dim, proj_dim), nn.ReLU(), nn.Dropout(0.2))
 
+        # positional encoding for 3-token sequence (learned). Make shape (1, 3, P) so broadcasting is explicit.
+        self.pos_emb = nn.Parameter(torch.randn(1, 3, proj_dim) * 0.02)
 
-        # positional encoding for 3-token sequence (small learned)
-        self.pos_emb = nn.Parameter(torch.randn(3, proj_dim) * 0.02)
-
-        # Transformer Encoder across modalities
-        encoder_layer = nn.TransformerEncoderLayer(d_model=proj_dim, nhead=nhead, dim_feedforward=hidden, dropout=0.2, activation='relu', batch_first=False)
+        # Transformer Encoder across modalities - use batch_first=True and expect (B, 3, P)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=proj_dim,
+            nhead=nhead,
+            dim_feedforward=hidden,
+            dropout=0.2,
+            activation='relu',
+            batch_first=True
+        )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=transformer_layers)
+
 
         # Shared classifier from transformer output
         self.classifier_shared = nn.Sequential(
@@ -119,13 +132,14 @@ class HybridFusionModel(nn.Module):
         pa = self.proj_a(a)
         pv = self.proj_v(v)
 
-        # build sequence (S=3, B, P) -> transformer expects (S,B,E) with batch_first=False
-        seq = torch.stack([pt, pa, pv], dim=0)  # (3, B, P)
-        seq = seq + self.pos_emb.unsqueeze(1)   # broadcast pos emb (3,1,P)
+        # build sequence with batch as first dim: (B, 3, P)
+        seq = torch.stack([pt, pa, pv], dim=1)  # (B, 3, P)
+        seq = seq + self.pos_emb.to(seq.device)  # pos_emb: (1,3,P) broadcast to (B,3,P)
 
-        # transformer
-        trans_out = self.transformer(seq)  # (3, B, P)
-        pooled = trans_out.mean(dim=0)     # (B, P) -- mean across tokens
+        # transformer (batch_first=True)
+        trans_out = self.transformer(seq)  # (B, 3, P)
+        pooled = trans_out.mean(dim=1)     # (B, P) -- mean across tokens
+
 
         # shared logits
         shared_logits = self.classifier_shared(pooled)  # (B, C)
@@ -238,6 +252,11 @@ def main():
 
     print(f"✅ Best val F1: {best_val_f1:.2f}% at epoch {best_epoch}")
     print("Saved: hybrid_fusion_best.pt and hybrid_fusion_log.csv")
+    
+    
+# ✅ For external imports
+HybridFusion = HybridFusionModel
+
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,9 @@ Saves feature tensors (.pt) to data/features/{modality}/ for training.
 """
 
 import os
+import cv2
 import torch
+import torchaudio
 import pandas as pd
 from tqdm import tqdm
 from transformers import (
@@ -16,95 +18,94 @@ from transformers import (
     Wav2Vec2Processor, Wav2Vec2Model,
     AutoImageProcessor, ViTModel
 )
-import librosa
-import cv2
 from PIL import Image
-import numpy as np
 
+# ---------- CONFIG ----------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"🔧 Using device: {DEVICE}")
 
-# ---------- PATHS ----------
-MANIFEST = "data/custom/manifest_train.csv"
-OUT_BASE = "data/features"
-os.makedirs(OUT_BASE, exist_ok=True)
+MANIFESTS = [
+    "data/manifest_train.csv",
+    "data/manifest_val.csv",
+    "data/manifest_test.csv",
+]
 
-os.makedirs(f"{OUT_BASE}/text", exist_ok=True)
-os.makedirs(f"{OUT_BASE}/audio", exist_ok=True)
-os.makedirs(f"{OUT_BASE}/video", exist_ok=True)
+OUT_DIR = "data/features"
+for sub in ["text", "audio", "video"]:
+    os.makedirs(os.path.join(OUT_DIR, sub), exist_ok=True)
 
 # ---------- LOAD MODELS ----------
 print("📚 Loading pretrained models...")
 
 # Text
 text_tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-text_model = AutoModel.from_pretrained("distilbert-base-uncased").to(DEVICE)
+text_model = AutoModel.from_pretrained("distilbert-base-uncased").to(DEVICE).eval()
 
 # Audio
 audio_proc = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
-audio_model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h").to(DEVICE)
+audio_model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h").to(DEVICE).eval()
 
-# Video (ViT)
+# Video
 image_proc = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
-vit_model = ViTModel.from_pretrained("google/vit-base-patch16-224").to(DEVICE)
+vit_model = ViTModel.from_pretrained("google/vit-base-patch16-224").to(DEVICE).eval()
 
-# ---------- EXTRACTORS ----------
 
-def extract_text_feat(text):
-    tokens = text_tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=64).to(DEVICE)
-    with torch.no_grad():
-        out = text_model(**tokens).last_hidden_state.mean(dim=1)
-    return out.squeeze(0).cpu()
+# ---------- EXTRACTION LOOP ----------
+for manifest_path in MANIFESTS:
+    print(f"\n🔍 Processing {manifest_path}...")
+    df = pd.read_csv(manifest_path)
 
-def extract_audio_feat(path, sr=16000):
-    y, _ = librosa.load(path, sr=sr)
-    inputs = audio_proc(y, sampling_rate=sr, return_tensors="pt", padding=True).to(DEVICE)
-    with torch.no_grad():
-        emb = audio_model(**inputs).last_hidden_state.mean(dim=1)
-    return emb.squeeze(0).cpu()
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="Extracting"):
+        sid = str(row["filename"])
+        text = str(row.get("text", ""))
+        audio = str(row.get("audio_path", ""))
+        video = str(row.get("video_path", ""))
 
-def extract_video_feat(path, num_frames=8):
-    cap = cv2.VideoCapture(path)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    if total <= 0:
-        cap.release()
-        return torch.zeros(768)
-    idxs = np.linspace(0, total-1, num_frames, dtype=int)
-    frames = []
-    for i in idxs:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, int(i))
-        ret, frame = cap.read()
-        if not ret:
+        # skip if already extracted
+        if all(os.path.exists(os.path.join(OUT_DIR, m, f"{sid}.pt")) for m in ["text", "audio", "video"]):
             continue
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = Image.fromarray(frame)
-        inputs = image_proc(frame, return_tensors="pt").to(DEVICE)
-        with torch.no_grad():
-            out = vit_model(**inputs).pooler_output
-        frames.append(out.cpu())
-    cap.release()
-    if not frames:
-        return torch.zeros(768)
-    return torch.stack(frames).mean(dim=0).squeeze(0)
 
-# ---------- MAIN ----------
-df = pd.read_csv(MANIFEST)
-df.columns = [c.strip().lower() for c in df.columns]
+        # ---------- TEXT ----------
+        try:
+            with torch.no_grad():
+                inputs = text_tokenizer(text, return_tensors="pt", truncation=True, padding=True).to(DEVICE)
+                text_feat = text_model(**inputs).last_hidden_state.mean(dim=1).cpu()
+            torch.save(text_feat, os.path.join(OUT_DIR, "text", f"{sid}.pt"))
+        except Exception as e:
+            print(f"⚠️ Text error for {sid}: {e}")
 
-print(f"🧩 Extracting features for {len(df)} samples...")
+        # ---------- AUDIO ----------
+        try:
+            if os.path.exists(audio):
+                wav, sr = torchaudio.load(audio)
+                inputs = audio_proc(wav.squeeze(0), sampling_rate=sr, return_tensors="pt").input_values.to(DEVICE)
+                with torch.no_grad():
+                    audio_feat = audio_model(inputs).last_hidden_state.mean(dim=1).cpu()
+                torch.save(audio_feat, os.path.join(OUT_DIR, "audio", f"{sid}.pt"))
+            else:
+                print(f"⚠️ Missing audio file: {audio}")
+        except Exception as e:
+            print(f"⚠️ Audio error for {sid}: {e}")
 
-for i, row in tqdm(df.iterrows(), total=len(df)):
-    sid = str(row.get("filename") or row.get("id") or f"sample_{i:03d}")
-    text = row.get("text") or row.get("sentence") or row.get("utterance") or ""
-    label = int(row["label"])
+        # ---------- VIDEO ----------
+                # ---------- VIDEO ----------
+        try:
+            if os.path.exists(video):
+                cap = cv2.VideoCapture(video)
+                success, frame = cap.read()
+                cap.release()
+                if success:
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    inputs = image_proc(images=Image.fromarray(frame_rgb), return_tensors="pt")["pixel_values"].to(DEVICE)
+                    with torch.no_grad():
+                        video_feat = vit_model(inputs).last_hidden_state.mean(dim=1).cpu()
+                    torch.save(video_feat, os.path.join(OUT_DIR, "video", f"{sid}.pt"))
+                else:
+                    print(f"⚠️ Could not read frame from video: {video}")
+            else:
+                print(f"⚠️ Missing video file: {video}")
+        except Exception as e:
+            print(f"⚠️ Video error for {sid}: {e}")
 
-    text_feat = extract_text_feat(text)
-    torch.save(text_feat, f"{OUT_BASE}/text/{sid}.pt")
-
-    audio_feat = extract_audio_feat(row["audio_path"])
-    torch.save(audio_feat, f"{OUT_BASE}/audio/{sid}.pt")
-
-    video_feat = extract_video_feat(row["video_path"])
-    torch.save(video_feat, f"{OUT_BASE}/video/{sid}.pt")
 
 print("✅ Saved all pretrained embeddings to data/features/")
