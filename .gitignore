@@ -17,3 +17,12 @@ __pycache__/
 *.log
 *.DS_Store
 .vscode/
+
+# Model weights & checkpoints
+results/*.pt
+
+# Logs and outputs
+*.log
+*.csv
+*.png
+!results/comparison_chart.png  # keep final chart
