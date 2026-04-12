@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DATA_DIR = "data/features"
 MANIFEST = "data/custom/manifest_train.csv"
-EPOCHS = 15
+EPOCHS = 3
 BATCH_SIZE = 4
 LR = 1e-4
 OUT_DIR = "results"
@@ -63,7 +63,7 @@ class MultimodalDataset(Dataset):
 # ----------------------------- #
 
 class BaselineFusionModel(nn.Module):
-    def __init__(self, text_dim=768, audio_dim=768, video_dim=1000, hidden_dim=512, num_classes=3):
+    def __init__(self, text_dim=768, audio_dim=768, video_dim=768, hidden_dim=512, num_classes=3):
         super().__init__()
         self.fc1 = nn.Linear(text_dim + audio_dim + video_dim, hidden_dim)
         self.relu = nn.ReLU()

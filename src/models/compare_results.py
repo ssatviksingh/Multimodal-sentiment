@@ -12,9 +12,9 @@ RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 models = {
-    "weighted_fusion": os.path.join(RESULTS_DIR, "weighted_fusion_log.csv"),
-    "transformer_fusion": os.path.join(RESULTS_DIR, "transformer_fusion_log.csv"),
-    "hybrid_fusion_vit_ast": os.path.join(RESULTS_DIR, "hybrid_fusion_log.csv"),
+    "Weighted Fusion": os.path.join(RESULTS_DIR, "weighted_fusion_log.csv"),
+    "Transformer Fusion": os.path.join(RESULTS_DIR, "transformer_fusion_log.csv"),
+    "Hybrid Fusion (ViT+AST)": os.path.join(RESULTS_DIR, "hybrid_fusion_log.csv"),
 }
 
 summary = []

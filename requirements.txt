@@ -15,6 +15,8 @@ wandb
 sentencepiece
 torchvision
 soundfile
+# Config
+PyYAML
 # Optional
 # pytorch-lightning
 

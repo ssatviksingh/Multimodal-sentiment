@@ -14,7 +14,7 @@ model_logs = {
     "EfficientNet-B0": "efficientnet_b0_log.csv",
     "ConvNeXt-Tiny": "convnext_tiny_log.csv",
     "ViT-B16": "vit_b16_log.csv",
-    "Hybrid-Fusion (Ours)": "hybrid_fusion_log.csv",
+    "Hybrid-Fusion (Proposed)": "hybrid_fusion_log.csv",
 }
 
 # Extract best metrics

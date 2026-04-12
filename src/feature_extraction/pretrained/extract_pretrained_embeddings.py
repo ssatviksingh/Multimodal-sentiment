@@ -88,7 +88,6 @@ for manifest_path in MANIFESTS:
             print(f"⚠️ Audio error for {sid}: {e}")
 
         # ---------- VIDEO ----------
-                # ---------- VIDEO ----------
         try:
             if os.path.exists(video):
                 cap = cv2.VideoCapture(video)

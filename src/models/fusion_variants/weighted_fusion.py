@@ -37,7 +37,7 @@ class MultimodalDataset(Dataset):
 
 # ---------------- Model ----------------
 class WeightedFusion(nn.Module):
-    def __init__(self, tdim=768, adim=768, vdim=1000, hdim=512, classes=3):
+    def __init__(self, tdim=768, adim=768, vdim=768, hdim=512, classes=3):
         super().__init__()
         self.text_fc = nn.Linear(tdim, hdim)
         self.audio_fc = nn.Linear(adim, hdim)

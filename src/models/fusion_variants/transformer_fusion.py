@@ -40,7 +40,7 @@ class MultimodalDataset(Dataset):
 
 # ---------- Model ----------
 class TransformerFusion(nn.Module):
-    def __init__(self, tdim=768, adim=768, vdim=1000, hidden=512, classes=3, n_heads=4, n_layers=2):
+    def __init__(self, tdim=768, adim=768, vdim=768, hidden=512, classes=3, n_heads=4, n_layers=2):
         super().__init__()
         self.text_fc = nn.Linear(tdim, hidden)
         self.audio_fc = nn.Linear(adim, hidden)

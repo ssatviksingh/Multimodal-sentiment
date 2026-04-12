@@ -1,0 +1,11 @@
+experiment_name: early_fusion
+model_type: early_fusion
+manifest_path: data/custom/manifest_train_expanded.csv
+feature_dir: data/features
+out_dir: research_extensions/results/ablation_early_fusion
+epochs: 20
+batch_size: 4
+lr: 3e-4
+weight_decay: 1e-5
+seed: 42
+num_classes: 3
