@@ -32,7 +32,9 @@ for (name, path), color in zip(models.items(), colors):
     cols = [c.lower() for c in df.columns]
 
     val_acc_col = next((c for c in df.columns if "val_acc" in c.lower()), None)
-    val_f1_col = next((c for c in df.columns if "val_f1" in c.lower()), None)
+    val_f1_col = next((c for c in df.columns if c.lower() == "val_f1_macro"), None)
+    if val_f1_col is None:
+        val_f1_col = next((c for c in df.columns if "val_f1" in c.lower()), None)
 
     if val_acc_col is None:
         print(f"⚠️ Skipping {name}: no validation accuracy column.")

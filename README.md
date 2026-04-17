@@ -57,6 +57,10 @@ Multimodal-sentiment/
    venv\Scripts\activate
   ```
    On macOS/Linux:
+  ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+  ```
 3. **Install dependencies**
   ```bash
    pip install --upgrade pip
@@ -70,20 +74,22 @@ Run everything from the **repository root** (the folder that contains `requireme
 
 ### End-to-end benchmark (main demo)
 
-This is the usual path: build or use data → extract embeddings → train all models → compare. `train_all_models` also **evaluates** each model and **runs the comparison step** at the end, so you do not need to invoke `compare_all_models` separately unless you only want to regenerate charts.
+This is the usual path: use existing data → extract embeddings → train all models → compare. After training, `**train_all_models` runs test-set evaluation only for HybridFusion** (see [Metrics](#metrics-where-the-numbers-live)). It then runs `compare_all_models`. To **retrain everything** even when checkpoints exist, use `--force-retrain`.
 
 
-| Step                      | Command                                                                     | Notes                                                                                                                                                                            |
-| ------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Dataset                | `python src/data_creation/generate_large_dataset.py`                        | Creates samples and `data/manifest_*.csv`. Skip if your manifests and media are already in place.                                                                                |
-| 2. Embeddings             | `python src/feature_extraction/pretrained/extract_pretrained_embeddings.py` | Writes `data/features/{text,audio,video}/`. Needs GPU/CPU time and disk.                                                                                                         |
-| 3. Train + eval + compare | `python -m src.models.train_all_models`                                     | Trains ResNet-18, EfficientNet-B0, ConvNeXt-Tiny, ViT-B/16, and hybrid fusion; skips any model that already has `results/<name>_best.pt`; saves logs and plots under `results/`. |
+| Step                      | Command                                                                     | Notes                                                                                                                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Dataset                | `python src/data_creation/generate_large_dataset.py`                        | Creates samples and `data/manifest_*.csv`. Skip if your manifests and media are already in place.                                                                                       |
+| 2. Embeddings             | `python src/feature_extraction/pretrained/extract_pretrained_embeddings.py` | Writes `data/features/{text,audio,video}/`. Needs GPU/CPU time and disk.                                                                                                                |
+| 3. Train + eval + compare | `python -m src.models.train_all_models`                                     | Trains baselines + hybrid; skips training if `results/<name>_best.pt` exists unless you pass `--force-retrain`. Runs `**evaluate_model` once** (hybrid test set) after hybrid training. |
+| 3b. Force full retrain    | `python -m src.models.train_all_models --force-retrain`                     | Ignores existing checkpoints so all models train on current features.                                                                                                                   |
 
 
-**Evaluate only the hybrid fusion checkpoint** (after step 2 and a trained `results/hybrid_fusion_best.pt`):
+**Hybrid test-set metrics** (`data/manifest_test.csv` + `data/features/`):
 
 ```bash
 python -m src.models.evaluate_model
+# Optional: python -m src.models.evaluate_model --checkpoint results/hybrid_fusion_best.pt --manifest data/manifest_test.csv
 ```
 
 **Regenerate comparison charts** without retraining (if checkpoints already exist):
@@ -138,7 +144,7 @@ Generate or expand data:
 python src/data_creation/generate_large_dataset.py
 ```
 
-This creates synthetic text, audio, and video samples, writes manifest files (`manifest_train.csv`, `manifest_val.csv`, `manifest_test.csv`), and stores paths under `data/`.
+This creates generated text, audio, and video samples, writes manifest files (`manifest_train.csv`, `manifest_val.csv`, `manifest_test.csv`), and stores paths under `data/`.
 
 ## Pretrained feature extraction
 
@@ -158,15 +164,35 @@ Embeddings are written under (ignored by git):
 
 ```bash
 python -m src.models.train_all_models
+python -m src.models.train_all_models --force-retrain   # optional: ignore existing checkpoints
 ```
 
-Trains CNNs, ViT, and fusion models; saves checkpoints and logs under `results/` (local only; not committed).
+Trains CNNs, ViT, and hybrid fusion; saves checkpoints and logs under `results/` (local only; not committed).
 
-**Evaluate a single model:**
+**Test-set evaluation (HybridFusion only):**
 
 ```bash
 python -m src.models.evaluate_model
 ```
+
+CNN/ViT baselines do not use this script; use validation metrics in their `results/*_log.csv` files (see [Baseline models](#baseline-models-cnn--vit)).
+
+## Metrics: where the numbers live
+
+
+| What you need                                         | Where it is                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Hybrid — test accuracy / macro F1** (for reports)   | `results/evaluation_summary.txt` (from `evaluate_model`)                                            |
+| **Hybrid — validation curves**                        | `results/hybrid_fusion_log.csv`, `hybrid_fusion_curve.png`                                          |
+| **All models — best validation epoch (chart)**        | `python -m src.models.compare_all_models` → `results/comparison_chart.png` (reads best row per log) |
+| **Fusion variants (weighted / transformer / hybrid)** | `python -m src.models.compare_results` → `results/accuracy_progression.csv` (only logs that exist)  |
+
+
+Validation metrics come from training logs; test metrics for the hybrid come only from `evaluate_model`.
+
+## Baseline models (CNN / ViT)
+
+The ResNet, EfficientNet, ConvNeXt, and ViT training scripts under `src/models/cnn_variants/` and `transformer_variants/` currently train on **placeholder random image tensors** for quick pipeline checks. They do **not** consume `data/features/` multimodal embeddings. **Report numbers for the real multimodal task** should come from **HybridFusion** (`evaluate_model` + `hybrid_fusion_log.csv`). Comparing CNN/ViT validation logs to hybrid on the same table is **not** apples-to-apples until those baselines are reimplemented on the same embedding dataset.
 
 ## Comparison graphs
 
@@ -176,7 +202,13 @@ After training:
 python -m src.models.compare_all_models
 ```
 
-Produces comparison outputs under `results/` (for example accuracy curves and comparison charts).
+Produces `results/comparison_chart.png` from each model’s log (best validation epoch).
+
+Fusion-only comparison:
+
+```bash
+python -m src.models.compare_results
+```
 
 ## Results summary (example)
 
@@ -207,3 +239,19 @@ Illustrative numbers from an example run — your metrics will vary by data and 
 ## Research extensions
 
 See `[research_extensions/README_research.md](research_extensions/README_research.md)` for telehealth-focused experiments, ablations, and analysis scripts. Outputs from those scripts go under `research_extensions/results/` (gitignored).
+
+## Git (optional): SSH remote
+
+If you use an SSH host alias (e.g. `github.com-ssatviksingh`):
+
+```bash
+git remote set-url origin git@github.com-ssatviksingh:ssatviksingh/Multimodal-sentiment.git
+git push origin main
+```
+
+## Verification checklist
+
+1. Use the same `data/features/` and manifests you trained on; if you regenerated features, run `python -m src.models.train_all_models --force-retrain` or delete stale `results/*_best.pt` first.
+2. After training, confirm `results/evaluation_summary.txt` matches the hybrid test run you report.
+3. `python -m src.models.compare_all_models` should list each model with best validation metrics (not repeated hybrid test prints).
+

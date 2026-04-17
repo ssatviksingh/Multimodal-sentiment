@@ -38,7 +38,7 @@ def add_background_noise(
     noise_type: NoiseType = "white",
 ) -> torch.Tensor:
     """
-    Add synthetic background noise to an audio waveform tensor.
+    Add simulated background noise to an audio waveform tensor.
 
     For now, we approximate different noise types using colored variants of
     white noise (e.g., low-pass / band-pass shaping could be added later).

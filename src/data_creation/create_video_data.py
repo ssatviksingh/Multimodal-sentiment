@@ -1,6 +1,6 @@
 """
 create_video_data.py
-Generates short synthetic videos representing sentiment categories.
+Generates short sample videos representing sentiment categories.
 Uses colored backgrounds and text overlays for each label.
 0 = Negative (red), 1 = Neutral (gray), 2 = Positive (green)
 """

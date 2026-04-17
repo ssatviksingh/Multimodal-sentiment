@@ -1,6 +1,6 @@
 """
 create_text_data.py
-Generates small synthetic text samples for multimodal sentiment dataset.
+Generates small text samples for multimodal sentiment dataset.
 Each sample = a short sentence + sentiment label (0 = Negative, 1 = Neutral, 2 = Positive)
 """
 

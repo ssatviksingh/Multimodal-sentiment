@@ -1,6 +1,6 @@
 """
 generate_dummy_dataset.py
-Creates a large synthetic multimodal dataset:
+Creates a large multimodal dataset:
  - Random short audio (sine + noise)
  - Solid-color video clips
  - Text sentences (positive, neutral, negative)
@@ -100,4 +100,4 @@ for name, data in zip(["train", "val", "test"], [train_split, val_split, test_sp
         writer.writerows(data)
     print(f"✅ Wrote {manifest} with {len(data)} samples")
 
-print("🎯 Synthetic multimodal dataset generated successfully!")
+print("🎯 Multimodal dataset generated successfully!")

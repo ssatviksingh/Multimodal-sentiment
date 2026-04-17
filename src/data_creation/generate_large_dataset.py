@@ -1,7 +1,7 @@
 """
 generate_large_dataset.py
 ──────────────────────────
-Generates a scalable synthetic multimodal dataset (text, audio, video)
+Generates a scalable multimodal dataset (text, audio, video)
 with the same format as your existing dataset.
 
 💾 Output:
@@ -99,7 +99,7 @@ def create_sample(i):
 
 # ---------- MAIN ----------
 def generate_dataset(num_samples, workers=8):
-    print(f"🎬 Generating {num_samples:,} synthetic multimodal samples using {workers} workers...")
+    print(f"🎬 Generating {num_samples:,} multimodal samples using {workers} workers...")
     with mp.Pool(processes=workers) as pool:
         rows = list(tqdm(pool.imap(create_sample, range(num_samples)), total=num_samples))
 

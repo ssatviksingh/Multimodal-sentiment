@@ -18,7 +18,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-from src.models.fusion_variants.hybrid_fusion_vit_ast import HybridFusionModel, MultimodalDataset
+from src.models.fusion_variants.hybrid_fusion_vit_ast import MultimodalDataset, load_hybrid_for_eval
+from src.models.fusion_variants.feature_io import dataloader_kwargs
 
 # -------- CONFIG ----------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -56,8 +57,9 @@ def get_best_val_f1(model_name):
         return None
     try:
         df = pd.read_csv(log_path)
-        if "val_f1" in df.columns:
-            return float(df["val_f1"].max())
+        for col in ("val_f1_macro", "val_f1", "f1"):
+            if col in df.columns:
+                return float(df[col].max())
     except Exception as e:
         print(f"⚠️ Could not read {log_path}: {e}")
     return None
@@ -68,11 +70,17 @@ def main():
     print(f"📁 Scanning for models in: {RESULTS_DIR}")
 
     test_data = MultimodalDataset(TEST_MANIFEST, DATA_DIR)
-    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+    test_loader = DataLoader(
+        test_data, batch_size=BATCH_SIZE, shuffle=False, **dataloader_kwargs(DEVICE)
+    )
 
-    models = [f for f in os.listdir(RESULTS_DIR) if f.endswith("_best.pt")]
+    candidates = [f for f in os.listdir(RESULTS_DIR) if f.endswith("_best.pt")]
+    models = [f for f in candidates if f == "hybrid_fusion_best.pt"]
     if not models:
-        print("❌ No *_best.pt models found in results/.")
+        print(
+            "❌ No hybrid_fusion_best.pt in results/. "
+            "(Other *_best.pt files are vision CNNs — not evaluated here; use evaluate_model for hybrid.)"
+        )
         return
 
     results = []
@@ -81,8 +89,7 @@ def main():
         model_path = os.path.join(RESULTS_DIR, model_name)
         print(f"\n🚀 Evaluating {model_name} ...")
 
-        model = HybridFusionModel(text_dim=768, audio_dim=768, video_dim=768)
-        model.load_state_dict(torch.load(model_path, map_location=DEVICE))
+        model = load_hybrid_for_eval(model_path, map_location=DEVICE)
         model.to(DEVICE)
 
         acc, f1_macro, f1_weighted = evaluate_model(model, test_loader)
